@@ -1,68 +1,114 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import puppeteer from "puppeteer";
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return res.status(405).end();
   }
 
-  try {
-    const { shops } = req.body;
+  const { shops } = req.body;
 
-    if (!shops || !Array.isArray(shops)) {
-      return res.status(400).json({ error: "Invalid shops data" });
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
+
+  const page = await browser.newPage();
+
+  const html = `
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      direction: rtl;
+      padding: 40px;
     }
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #000;
+      padding: 8px;
+      text-align: center;
+      font-size: 14px;
+      height: 35px;
+    }
+    th {
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
 
-    const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([595, 842]);
-    const { width, height } = page.getSize();
+<header>
+  <h2>اسم الشركة</h2>
+</header>
 
-    // Use TimesRoman which has better Unicode support for Arabic
-    const font = await pdfDoc.embedFont(StandardFonts.TimesRoman);
-    const boldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
+<table>
+  <thead>
+    <tr>
+      <th>رقم</th>
+      <th>مجوهرات</th>
+      <th>ذهب ٩٩٩ لنا</th>
+      <th>نقدي لنا</th>
+      <th>ذهب ٩٩٩ لكم</th>
+      <th>نقدي لكم</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${shops
+      .map(
+        (shop: string, i: number) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${shop}</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+    `
+      )
+      .join("")}
+  </tbody>
+</table>
 
-    // Title in Arabic - TimesRoman should handle basic Arabic
-    page.drawText("Shops Balance Report", {
-      x: 50,
-      y: height - 60,
-      size: 24,
-      font: boldFont,
-      color: rgb(0, 0, 0),
-    });
+</body>
+</html>
+`;
 
-    // Simple table
-    const startY = height - 120;
-    const rowHeight = 25;
-    
-    // Draw shop data
-    shops.forEach((shop, index) => {
-      const y = startY - index * rowHeight;
-      
-      // Draw shop number and name
-      page.drawText(`${index + 1}. ${shop}`, {
-        x: 50,
-        y,
-        size: 14,
-        font: font,
-        color: rgb(0, 0, 0),
-      });
-    });
+  await page.setContent(html, { waitUntil: "networkidle0" });
 
-    const pdfBytes = await pdfDoc.save();
+  const pdf = await page.pdf({
+    format: "A4",
+    printBackground: true,
+    margin: {
+      top: "20mm",
+      bottom: "20mm",
+      left: "15mm",
+      right: "15mm",
+    },
+  });
 
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", 'attachment; filename="shops.pdf"');
-    res.setHeader("Cache-Control", "no-store");
-    res.status(200).send(Buffer.from(pdfBytes));
+  await browser.close();
 
-  } catch (error) {
-    console.error("Error:", error);
-    res.status(500).json({ 
-      error: "Failed to create PDF",
-      message: error instanceof Error ? error.message : "Unknown error"
-    });
-  }
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader(
+    "Content-Disposition",
+    "attachment; filename=balances.pdf"
+  );
+  res.setHeader("Cache-Control", "no-store");
+
+  res.send(pdf);
 }
