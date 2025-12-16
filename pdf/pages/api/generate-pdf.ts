@@ -107,5 +107,6 @@ export default async function handler(
 
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", "inline; filename=balances.pdf");
+  res.setHeader("Cache-Control", "no-store");
   res.send(Buffer.from(pdfBytes));
 }
