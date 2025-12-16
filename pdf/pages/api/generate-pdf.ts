@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import PdfPrinter from 'pdfmake';
+import type { TDocumentDefinitions } from 'pdfmake/interfaces';
 
 const fonts = {
   Amiri: {
@@ -13,9 +14,9 @@ const fonts = {
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   const printer = new PdfPrinter(fonts);
 
-  const { text } = req.body; // Arabic text from frontend
+  const { text } = req.body as { text: string }; // ensure TypeScript knows it's a string
 
-  const docDefinition = {
+  const docDefinition: TDocumentDefinitions = {
     content: [
       { text: text || 'مرحبا بالعالم', font: 'Amiri', alignment: 'right' },
     ],
