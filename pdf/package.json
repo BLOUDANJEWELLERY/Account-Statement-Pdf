@@ -13,12 +13,14 @@
     "next": "16.0.10",
     "path": "^0.12.7",
     "pdf-lib": "^1.17.1",
+    "puppeteer": "^24.33.0",
     "react": "19.2.1",
     "react-dom": "19.2.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/puppeteer": "^5.4.7",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
