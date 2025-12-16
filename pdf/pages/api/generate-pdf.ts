@@ -2,33 +2,32 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import PdfPrinter from 'pdfmake';
 
 const fonts = {
-  // Make sure you have an Arabic font file in public/fonts
-  Cairo: {
-    normal: 'public/fonts/Cairo-Regular.ttf',
-    bold: 'public/fonts/Cairo-Bold.ttf',
-    italics: 'public/fonts/Cairo-Regular.ttf',
-    bolditalics: 'public/fonts/Cairo-Bold.ttf',
+  Amiri: {
+    normal: 'public/fonts/Amiri-Regular.ttf',
+    bold: 'public/fonts/Amiri-Regular.ttf',
+    italics: 'public/fonts/Amiri-Regular.ttf',
+    bolditalics: 'public/fonts/Amiri-Regular.ttf',
   },
 };
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
   const printer = new PdfPrinter(fonts);
 
-  const { text } = req.body; // receive Arabic text from frontend
+  const { text } = req.body; // Arabic text from frontend
 
   const docDefinition = {
     content: [
-      { text: text || 'مرحبا بالعالم', font: 'Cairo', alignment: 'right' }, // RTL
+      { text: text || 'مرحبا بالعالم', font: 'Amiri', alignment: 'right' },
     ],
     defaultStyle: {
-      font: 'Cairo',
+      font: 'Amiri',
     },
     pageSize: 'A4',
     pageMargins: [40, 60, 40, 60],
   };
 
   const pdfDoc = printer.createPdfKitDocument(docDefinition);
-  let chunks: Uint8Array[] = [];
+  const chunks: Uint8Array[] = [];
 
   pdfDoc.on('data', (chunk) => chunks.push(chunk));
   pdfDoc.on('end', () => {
