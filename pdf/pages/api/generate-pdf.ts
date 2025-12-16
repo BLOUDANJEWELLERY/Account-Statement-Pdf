@@ -16,126 +16,157 @@ export default async function handler(
       return res.status(400).json({ error: "Invalid shops data" });
     }
 
+    // Create a new PDF document
     const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([595, 842]); // A4
+    const page = pdfDoc.addPage([595, 842]); // A4 size in points
     const { width, height } = page.getSize();
 
+    // Embed fonts
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-    // Try to load logo if it exists
-    try {
-      // For Vercel/Netlify deployment, we need to fetch the logo from the public URL
-      // In development, we can use the local URL
-      const isDev = process.env.NODE_ENV === "development";
-      const logoUrl = isDev 
-        ? `http://${req.headers.host}/logo.png`
-        : `https://${req.headers.host}/logo.png`;
-      
-      const response = await fetch(logoUrl);
-      if (response.ok) {
-        const logoBytes = await response.arrayBuffer();
-        const logoImage = await pdfDoc.embedPng(logoBytes);
-        
-        page.drawImage(logoImage, {
-          x: width - 120,
-          y: height - 100,
-          width: 80,
-          height: 80,
-        });
-      }
-    } catch (logoError) {
-      console.log("Logo not loaded, continuing without it:", logoError);
-      // Continue without logo if there's an error
-    }
+    // Title
+    page.drawText("Shops Balance Sheet", {
+      x: 50,
+      y: height - 50,
+      size: 24,
+      font: boldFont,
+      color: rgb(0, 0, 0),
+    });
 
-    // Company Name
+    // Company Name (in Arabic)
     page.drawText("اسم الشركة", {
-      x: width / 2 - 50,
-      y: height - 60,
+      x: width - 150,
+      y: height - 50,
       size: 18,
       font: boldFont,
     });
 
-    // Table
+    // Table Configuration
     const headers = [
-      "رقم",
-      "مجوهرات",
-      "ذهب ٩٩٩ لنا",
-      "نقدي لنا",
-      "ذهب ٩٩٩ لكم",
-      "نقدي لكم",
+      "No.",
+      "Shop Name",
+      "999 Gold (Us)",
+      "Cash (Us)",
+      "999 Gold (You)",
+      "Cash (You)",
     ];
 
-    const startY = height - 150;
-    const rowHeight = 30;
-    const colWidths = [40, 120, 90, 90, 90, 90];
+    const startY = height - 120;
+    const rowHeight = 25;
+    const colWidths = [40, 150, 100, 100, 100, 100];
 
-    let x = width - colWidths.reduce((a, b) => a + b, 0) - 30;
-
-    // Header Row
-    headers.forEach((text, i) => {
+    // Draw table headers
+    let x = 50;
+    headers.forEach((header, index) => {
+      // Header cell background
       page.drawRectangle({
         x,
         y: startY,
-        width: colWidths[i],
+        width: colWidths[index],
         height: rowHeight,
+        color: rgb(0.9, 0.9, 0.9), // Light gray background
         borderColor: rgb(0, 0, 0),
         borderWidth: 1,
       });
 
-      page.drawText(text, {
+      // Header text
+      page.drawText(header, {
         x: x + 5,
-        y: startY + 10,
+        y: startY + 7,
         size: 10,
         font: boldFont,
+        color: rgb(0, 0, 0),
       });
 
-      x += colWidths[i];
+      x += colWidths[index];
     });
 
-    // Rows
-    shops.forEach((shop: string, index: number) => {
-      let rowX = width - colWidths.reduce((a, b) => a + b, 0) - 30;
+    // Draw shop rows
+    shops.forEach((shop, index) => {
       const y = startY - (index + 1) * rowHeight;
+      let rowX = 50;
 
-      const rowData = [String(index + 1), shop, "", "", "", ""];
+      // Row data
+      const rowData = [
+        (index + 1).toString(),
+        shop,
+        "0",
+        "0",
+        "0",
+        "0"
+      ];
 
-      rowData.forEach((cell, i) => {
+      // Draw each cell in the row
+      rowData.forEach((cell, cellIndex) => {
+        // Cell background (alternating colors)
+        const isEvenRow = index % 2 === 0;
         page.drawRectangle({
           x: rowX,
           y,
-          width: colWidths[i],
+          width: colWidths[cellIndex],
           height: rowHeight,
-          borderColor: rgb(0, 0, 0),
-          borderWidth: 1,
+          color: isEvenRow ? rgb(1, 1, 1) : rgb(0.95, 0.95, 0.95),
+          borderColor: rgb(0.7, 0.7, 0.7),
+          borderWidth: 0.5,
         });
 
-        if (cell) {
-          page.drawText(cell, {
-            x: rowX + 5,
-            y: y + 10,
-            size: 10,
-            font,
-          });
-        }
+        // Cell text
+        page.drawText(cell, {
+          x: rowX + 5,
+          y: y + 7,
+          size: 10,
+          font,
+          color: rgb(0, 0, 0),
+        });
 
-        rowX += colWidths[i];
+        rowX += colWidths[cellIndex];
       });
     });
 
+    // Footer with generation date
+    const date = new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    
+    page.drawText(`Generated on: ${date}`, {
+      x: 50,
+      y: 50,
+      size: 10,
+      font,
+      color: rgb(0.5, 0.5, 0.5),
+    });
+
+    // Page number
+    page.drawText("Page 1 of 1", {
+      x: width - 100,
+      y: 50,
+      size: 10,
+      font,
+      color: rgb(0.5, 0.5, 0.5),
+    });
+
+    // Generate PDF bytes
     const pdfBytes = await pdfDoc.save();
 
+    // Set response headers
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", "attachment; filename=balances.pdf");
+    res.setHeader("Content-Disposition", "attachment; filename=shops_balance.pdf");
     res.setHeader("Cache-Control", "no-store");
+    
+    // Send the PDF
     res.status(200).send(Buffer.from(pdfBytes));
 
   } catch (error) {
     console.error("Error generating PDF:", error);
+    
+    // Send a more detailed error response
     res.status(500).json({ 
       error: "Failed to generate PDF", 
-      details: error instanceof Error ? error.message : "Unknown error" 
+      details: error instanceof Error ? error.message : "Unknown error",
+      stack: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.stack : undefined) : undefined
     });
   }
 }
