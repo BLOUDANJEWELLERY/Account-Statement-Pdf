@@ -139,7 +139,7 @@ export default async function handler(
 
     // Generate PDF
     const pdf = await page.pdf({
-      format: 'A4',
+      format: 'a4',
       printBackground: true,
       margin: {
         top: '20mm',
