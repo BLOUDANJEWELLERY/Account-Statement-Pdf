@@ -17,7 +17,7 @@ export default async function handler(
   const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
   // Logo
-  const logoPath = path.join(process.cwd(), "public/logo.png");
+  const logoPath = path.join(process.cwd(), "/logo.png");
   const logoBytes = fs.readFileSync(logoPath);
   const logoImage = await pdfDoc.embedPng(logoBytes);
 
