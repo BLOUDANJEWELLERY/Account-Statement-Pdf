@@ -10,17 +10,25 @@ export default function Home() {
     setInput("");
   };
 
-  const generatePdf = async () => {
-    const res = await fetch("/api/generate-pdf", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ shops }),
-    });
+const generatePdf = async () => {
+  const res = await fetch("/api/generate-pdf", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ shops }),
+  });
 
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
-    window.open(url);
-  };
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "balances.pdf"; // IMPORTANT
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  window.URL.revokeObjectURL(url);
+};
 
   return (
     <main style={{ padding: 30 }}>
