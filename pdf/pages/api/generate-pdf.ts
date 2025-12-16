@@ -1,76 +1,110 @@
-// pages/api/generate-pdf.ts - Working version
 import { NextApiRequest, NextApiResponse } from "next";
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { PDFDocument, rgb } from "pdf-lib";
+import fs from "fs";
+import path from "path";
+
+// Helper function to load font file
+async function loadFont(fontPath: string): Promise<Uint8Array> {
+  try {
+    // Check if file exists
+    if (!fs.existsSync(fontPath)) {
+      throw new Error(`Font file not found at: ${fontPath}`);
+    }
+    
+    const fontBytes = fs.readFileSync(fontPath);
+    return new Uint8Array(fontBytes);
+  } catch (error) {
+    console.error("Error loading font:", error);
+    throw error;
+  }
+}
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  // Only allow POST requests
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    // Parse request body
     const { shops } = req.body;
-    
-    // Validate input
+
     if (!shops || !Array.isArray(shops)) {
-      return res.status(400).json({ error: "Shops array is required" });
+      return res.status(400).json({ error: "Invalid shops data" });
     }
 
-    // Create PDF
+    // Create a new PDF document
     const pdfDoc = await PDFDocument.create();
-    
-    // Add a page
-    const page = pdfDoc.addPage([595, 842]); // A4
+    const page = pdfDoc.addPage([595, 842]); // A4 size
     const { width, height } = page.getSize();
 
-    // Get fonts
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    // Try to load Arabic font
+    let arabicFont;
+    try {
+      // Path to Arabic font
+      const fontPath = path.join(process.cwd(), "public", "fonts", "Amiri-Regular.ttf");
+      const fontBytes = await loadFont(fontPath);
+      arabicFont = await pdfDoc.embedFont(fontBytes);
+    } catch (fontError) {
+      console.log("Arabic font not found, using fallback font");
+      // Fallback to standard font (won't display Arabic correctly)
+      arabicFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    }
+
+    // Load standard font for English text
+    const standardFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-    // Add title
-    page.drawText("SHOPS BALANCE SHEET", {
-      x: 50,
+    // Title (in Arabic)
+    page.drawText("كشف حسابات المحلات", {
+      x: width / 2 - 100,
       y: height - 50,
-      size: 20,
-      font: boldFont,
+      size: 24,
+      font: arabicFont,
       color: rgb(0, 0, 0.5),
     });
 
-    // Add company name
-    page.drawText("Company Name Here", {
+    // Company Name (in Arabic)
+    page.drawText("اسم الشركة", {
       x: 50,
-      y: height - 80,
-      size: 14,
-      font,
+      y: height - 50,
+      size: 18,
+      font: arabicFont,
       color: rgb(0.3, 0.3, 0.3),
     });
 
-    // Add generation date
-    const today = new Date().toLocaleDateString();
-    page.drawText(`Generated: ${today}`, {
+    // Date (in Arabic)
+    const hijriDate = getHijriDate(); // You'll need to implement this or use a library
+    page.drawText(`التاريخ: ${hijriDate}`, {
       x: width - 200,
-      y: height - 80,
+      y: height - 50,
       size: 12,
-      font,
+      font: arabicFont,
       color: rgb(0.5, 0.5, 0.5),
     });
 
-    // Add table headers
-    const headers = ["No.", "Shop Name", "Balance"];
-    const startY = height - 150;
-    const rowHeight = 25;
-    const colWidths = [50, 300, 150];
+    // Table headers (in Arabic - right to left)
+    const headers = [
+      "النقدي لكم",
+      "ذهب ٩٩٩ لكم", 
+      "النقدي لنا",
+      "ذهب ٩٩٩ لنا",
+      "اسم المحل",
+      "م"
+    ];
 
-    // Draw header row
-    let currentX = 50;
+    const startY = height - 120;
+    const rowHeight = 30;
+    const colWidths = [90, 90, 90, 90, 150, 40]; // Reversed for RTL
+
+    // Draw table headers (from right to left)
+    let currentX = width - 50; // Start from right
+    
     headers.forEach((header, index) => {
-      // Header background
+      // Draw header cell
       page.drawRectangle({
-        x: currentX,
+        x: currentX - colWidths[index],
         y: startY,
         width: colWidths[index],
         height: rowHeight,
@@ -79,83 +113,76 @@ export default async function handler(
         borderWidth: 1,
       });
 
-      // Header text
+      // Draw header text (Arabic, right-aligned)
+      const textWidth = colWidths[index] - 10; // Padding
+      
+      // For Arabic text, we need to position it to the right within the cell
       page.drawText(header, {
-        x: currentX + 10,
-        y: startY + 7,
+        x: currentX - colWidths[index] + 5, // Start from left with padding
+        y: startY + 10,
         size: 12,
-        font: boldFont,
+        font: arabicFont,
         color: rgb(0, 0, 0),
       });
 
-      currentX += colWidths[index];
+      currentX -= colWidths[index];
     });
 
     // Draw shop rows
     shops.forEach((shop: string, index: number) => {
       const rowY = startY - (index + 1) * rowHeight;
-      currentX = 50;
+      currentX = width - 50;
 
       // Row background (alternating colors)
-      const isEven = index % 2 === 0;
+      const isEvenRow = index % 2 === 0;
       page.drawRectangle({
-        x: currentX,
+        x: currentX - colWidths.reduce((a, b) => a + b, 0),
         y: rowY,
         width: colWidths.reduce((a, b) => a + b, 0),
         height: rowHeight,
-        color: isEven ? rgb(1, 1, 1) : rgb(0.98, 0.98, 0.98),
-        borderColor: rgb(0.8, 0.8, 0.8),
+        color: isEvenRow ? rgb(1, 1, 1) : rgb(0.98, 0.98, 0.98),
+        borderColor: rgb(0.7, 0.7, 0.7),
         borderWidth: 0.5,
       });
 
-      // Row data
+      // Row data (reversed for RTL)
       const rowData = [
-        (index + 1).toString(),
-        shop,
-        "0.00"
+        "٠", // النقدي لكم
+        "٠", // ذهب ٩٩٩ لكم
+        "٠", // النقدي لنا
+        "٠", // ذهب ٩٩٩ لنا
+        shop, // اسم المحل
+        (index + 1).toString() // م (number)
       ];
 
-      // Draw each cell
+      // Draw each cell (from right to left)
       rowData.forEach((cell, cellIndex) => {
+        // Choose font based on content
+        const useArabicFont = /[\u0600-\u06FF]/.test(cell) || cellIndex === 4 || cellIndex === 5;
+        const fontToUse = useArabicFont ? arabicFont : standardFont;
+
+        // Draw cell text
         page.drawText(cell, {
-          x: currentX + 10,
-          y: rowY + 7,
+          x: currentX - colWidths[cellIndex] + 5,
+          y: rowY + 10,
           size: 11,
-          font,
+          font: fontToUse,
           color: rgb(0, 0, 0),
         });
 
-        // Draw vertical lines
-        if (cellIndex < headers.length - 1) {
-          page.drawLine({
-            start: { x: currentX + colWidths[cellIndex], y: rowY },
-            end: { x: currentX + colWidths[cellIndex], y: rowY + rowHeight },
-            thickness: 0.5,
-            color: rgb(0.8, 0.8, 0.8),
-          });
-        }
-
-        currentX += colWidths[cellIndex];
+        // Move left for next cell
+        currentX -= colWidths[cellIndex];
       });
     });
 
-    // Add footer
-    const totalShops = shops.length;
-    const totalY = startY - (totalShops + 1) * rowHeight;
+    // Footer with totals
+    const totalY = startY - (shops.length + 1) * rowHeight;
     
-    page.drawRectangle({
-      x: 50,
-      y: totalY - 5,
-      width: colWidths.reduce((a, b) => a + b, 0),
-      height: 25,
-      color: rgb(0.95, 0.95, 0.95),
-    });
-
-    page.drawText(`Total Shops: ${totalShops}`, {
-      x: 60,
-      y: totalY,
-      size: 12,
-      font: boldFont,
+    page.drawText(`إجمالي المحلات: ${shops.length}`, {
+      x: width - 200,
+      y: totalY - 20,
+      size: 14,
+      font: arabicFont,
       color: rgb(0, 0, 0.5),
     });
 
@@ -164,8 +191,8 @@ export default async function handler(
 
     // Set response headers
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", "attachment; filename=shops-balance.pdf");
-    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+    res.setHeader("Content-Disposition", "attachment; filename=كشف-الحسابات.pdf");
+    res.setHeader("Cache-Control", "no-store");
     
     // Send the PDF
     res.status(200).send(Buffer.from(pdfBytes));
@@ -173,13 +200,28 @@ export default async function handler(
   } catch (error) {
     console.error("Error generating PDF:", error);
     
-    // Return detailed error in development
     res.status(500).json({ 
-      error: "PDF generation failed",
-      message: error instanceof Error ? error.message : "Unknown error",
-      ...(process.env.NODE_ENV === 'development' && {
-        stack: error instanceof Error ? error.stack : undefined
-      })
+      error: "فشل إنشاء ملف PDF",
+      message: error instanceof Error ? error.message : "خطأ غير معروف",
     });
+  }
+}
+
+// Simple function to get Hijri date (you might want to use a proper library)
+function getHijriDate(): string {
+  const today = new Date();
+  const options: Intl.DateTimeFormatOptions = {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    calendar: 'islamic',
+    numberingSystem: 'arab'
+  };
+  
+  try {
+    return new Intl.DateTimeFormat('ar-SA-u-ca-islamic', options).format(today);
+  } catch (e) {
+    return "١٤٤٥/٠٥/١٠"; // Fallback date
   }
 }
