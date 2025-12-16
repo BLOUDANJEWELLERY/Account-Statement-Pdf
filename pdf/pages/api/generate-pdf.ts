@@ -1,5 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import fs from "fs";
+import path from "path";
 
 export default async function handler(
   req: NextApiRequest,
@@ -20,22 +22,23 @@ export default async function handler(
     const page = pdfDoc.addPage([595, 842]);
     const { width, height } = page.getSize();
 
-    // Load Arabic font from Google Fonts CDN
+    // Load Arabic font from local file
     let arabicFont;
     try {
-      const fontUrl = "https://fonts.gstatic.com/s/amiri/v24/J7aRnpd8CGxBHpUutLM.ttf";
-      const fontResponse = await fetch(fontUrl);
-      const fontBytes = new Uint8Array(await fontResponse.arrayBuffer());
+      // Read the font file from public directory
+      const fontPath = path.join(process.cwd(), 'public', 'fonts', 'Amiri-Regular.ttf');
+      const fontBytes = fs.readFileSync(fontPath);
       arabicFont = await pdfDoc.embedFont(fontBytes);
     } catch (fontError) {
-      console.log("Using fallback font");
-      arabicFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      console.error("Failed to load Arabic font:", fontError);
+      // Fallback to TimesRoman which has better Unicode support
+      arabicFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
     }
 
     const standardFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-    // Arabic title
+    // Title
     page.drawText("كشف حساب المحلات التجارية", {
       x: 50,
       y: height - 60,
@@ -44,7 +47,7 @@ export default async function handler(
       color: rgb(0, 0, 0),
     });
 
-    // Simple table (without complex RTL layout for now)
+    // Simple table
     const headers = ["م", "اسم المحل", "التاريخ", "المبلغ"];
     const colWidths = [40, 200, 150, 100];
     const startY = height - 150;
@@ -80,7 +83,7 @@ export default async function handler(
 
       const rowData = [
         (index + 1).toString(),
-        shop, // Arabic shop name will display correctly
+        shop,
         new Date().toLocaleDateString('ar-SA'),
         "٠ دينار"
       ];
@@ -128,8 +131,10 @@ export default async function handler(
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ 
-      error: "فشل إنشاء الملف",
-      message: error instanceof Error ? error.message : "خطأ غير معروف"
+      error: "Failed to create file",
+      message: error instanceof Error ? error.message : "Unknown error",
+      // Include more details for debugging
+      stack: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.stack : undefined) : undefined
     });
   }
 }
