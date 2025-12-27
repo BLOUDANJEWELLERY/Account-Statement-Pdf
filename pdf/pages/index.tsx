@@ -26,24 +26,36 @@ export default function Home() {
     loadPdfMake();
   }, []);
 
-  const generatePDF = () => {
-    if (!pdfMake) return;
+const generatePDF = () => {
+  if (!pdfMake) return;
 
-    const docDefinition: TDocumentDefinitions = {
-      defaultStyle: {
-        font: "Amiri",
-        alignment: "right",
-      },
-      content: [
-        { text: "هذا ملف PDF باللغة العربية", fontSize: 18 },
-        { text: "يعمل بدون أي أخطاء على Netlify", fontSize: 14 },
-      ],
-    };
-pdfMake.createPdf(docDefinition).getBlob((blob: Blob) => {
-  const url = URL.createObjectURL(blob);
-  window.open(url);
-});
+  const docDefinition = {
+    defaultStyle: {
+      font: "Amiri",
+      alignment: "right",
+    },
+    content: [
+      { text: "هذا ملف PDF باللغة العربية", fontSize: 18 },
+      { text: "هذا الحل يعمل على iPhone Safari 100٪", fontSize: 14 },
+    ],
   };
+
+  pdfMake.createPdf(docDefinition).getBlob((blob: Blob) => {
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "arabic.pdf";
+
+    // 🔑 THIS is what Safari requires
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    URL.revokeObjectURL(url);
+  });
+};
+
   return (
     <div style={{ padding: 40 }}>
       <button onClick={generatePDF} disabled={!pdfMake}>
