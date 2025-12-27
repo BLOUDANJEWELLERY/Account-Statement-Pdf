@@ -39,9 +39,11 @@ export default function Home() {
         { text: "يعمل بدون أي أخطاء على Netlify", fontSize: 14 },
       ],
     };
-pdfMake.createPdf(docDefinition).download("arabic.pdf");
-     };
-
+pdfMake.createPdf(docDefinition).getBlob((blob: Blob) => {
+  const url = URL.createObjectURL(blob);
+  window.open(url);
+});
+  };
   return (
     <div style={{ padding: 40 }}>
       <button onClick={generatePDF} disabled={!pdfMake}>
