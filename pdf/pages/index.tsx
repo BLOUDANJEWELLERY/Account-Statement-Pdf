@@ -11,81 +11,52 @@ export default function Home() {
     setLogs((l) => [...l, `[${new Date().toISOString()}] ${text}`]);
   };
 
-  // Capture EVERYTHING
   useEffect(() => {
-    const originalLog = console.log;
-    const originalError = console.error;
+    log("🚀 useEffect started (client)");
 
-    console.log = (...args) => {
-      originalLog(...args);
-      args.forEach(log);
-    };
+    const load = async () => {
+      try {
+        log("📦 Importing pdfmake...");
+        const pdfMakeModule = await import("pdfmake/build/pdfmake");
+        const vfsModule = await import("pdfmake/build/vfs_fonts");
 
-    console.error = (...args) => {
-      originalError(...args);
-      args.forEach((a) => log("❌ " + a));
-    };
+        const pdfMakeInstance = pdfMakeModule.default;
 
-    window.onerror = (msg, src, line, col) => {
-      log(`❌ window.onerror: ${msg} @ ${line}:${col}`);
-      return false;
-    };
+        // SAFARI-SAFE VFS
+        const vfs =
+          (vfsModule as any).pdfMake?.vfs ||
+          (vfsModule as any).default?.pdfMake?.vfs ||
+          (vfsModule as any).default ||
+          null;
 
-    window.onunhandledrejection = (e) => {
-      log("❌ Unhandled promise rejection:");
-      log(e.reason);
-    };
+        if (!vfs) {
+          log("❌ VFS NOT FOUND");
+          return;
+        }
 
-    return () => {
-      console.log = originalLog;
-      console.error = originalError;
-    };
-  }, []);
+        log("✅ VFS FOUND");
+        pdfMakeInstance.vfs = vfs;
 
-  // Load pdfMake CLIENT ONLY
-useEffect(() => {
-  const load = async () => {
-    try {
-      console.log("📦 Importing pdfmake...");
-      const pdfMakeModule = await import("pdfmake/build/pdfmake");
+        // Use built-in Roboto font (always works)
+        pdfMakeInstance.fonts = {
+          Roboto: {
+            normal: "Roboto-Regular.ttf",
+            bold: "Roboto-Medium.ttf",
+            italics: "Roboto-Italic.ttf",
+            bolditalics: "Roboto-MediumItalic.ttf",
+          },
+        };
 
-      console.log("📦 Importing vfs_fonts...");
-      const vfsModule = await import("pdfmake/build/vfs_fonts");
-
-      const pdfMakeInstance = pdfMakeModule.default;
-
-      // 🔑 SAFARI-SAFE VFS EXTRACTION
-      const vfs =
-        (vfsModule as any).pdfMake?.vfs ||
-        (vfsModule as any).default?.pdfMake?.vfs ||
-        (vfsModule as any).default ||
-        null;
-
-      if (!vfs) {
-        console.error("❌ VFS NOT FOUND IN MODULE");
-        console.log("🧩 vfsModule keys:", Object.keys(vfsModule));
-        return;
+        log("✅ pdfMake READY");
+        setPdfMake(pdfMakeInstance);
+      } catch (err) {
+        log("❌ pdfMake load failed");
+        log(err);
       }
+    };
 
-      console.log("✅ VFS FOUND");
-
-      pdfMakeInstance.vfs = vfs;
-
-      pdfMakeInstance.fonts = {
-        Amiri: {
-          normal: "Amiri-Regular.ttf",
-        },
-      };
-
-      console.log("✅ pdfMake READY");
-      setPdfMake(pdfMakeInstance);
-    } catch (e) {
-      console.error("❌ pdfMake load failed", e);
-    }
-  };
-
-  load();
-}, []);
+    load();
+  }, []);
 
   const generatePDF = () => {
     log("🖱 Button clicked");
@@ -98,12 +69,12 @@ useEffect(() => {
     try {
       const docDefinition: TDocumentDefinitions = {
         defaultStyle: {
-          font: "Amiri",
+          font: "Roboto", // Using built-in font
           alignment: "right",
         },
         content: [
-          { text: "اختبار PDF عربي", fontSize: 18 },
-          { text: "إذا رأيت هذا، فكل شيء يعمل", fontSize: 14 },
+          { text: "هذا ملف PDF باللغة العربية", fontSize: 18 },
+          { text: "يعمل الآن على iPhone Safari و أي متصفح آخر", fontSize: 14 },
         ],
       };
 
@@ -118,7 +89,7 @@ useEffect(() => {
 
         const a = document.createElement("a");
         a.href = url;
-        a.download = "arabic-debug.pdf";
+        a.download = "arabic-roboto.pdf";
 
         document.body.appendChild(a);
         a.click();
@@ -135,7 +106,7 @@ useEffect(() => {
 
   return (
     <div style={{ padding: 20, fontFamily: "monospace" }}>
-      <h1>Arabic PDF Debug Mode (iOS Safari)</h1>
+      <h1>Arabic PDF Debug Mode</h1>
 
       <button
         onClick={generatePDF}
