@@ -43,43 +43,49 @@ export default function Home() {
   }, []);
 
   // Load pdfMake CLIENT ONLY
-  useEffect(() => {
-    log("🚀 useEffect started (client)");
+useEffect(() => {
+  const load = async () => {
+    try {
+      console.log("📦 Importing pdfmake...");
+      const pdfMakeModule = await import("pdfmake/build/pdfmake");
 
-    const load = async () => {
-      try {
-        log("📦 Importing pdfmake...");
-        const pdfMakeModule = await import("pdfmake/build/pdfmake");
-        log("📦 Importing vfs_fonts...");
-        const pdfFontsModule = await import("pdfmake/build/vfs_fonts");
+      console.log("📦 Importing vfs_fonts...");
+      const vfsModule = await import("pdfmake/build/vfs_fonts");
 
-        const pdfMakeInstance = pdfMakeModule.default;
-        const pdfFonts = pdfFontsModule.default as any;
+      const pdfMakeInstance = pdfMakeModule.default;
 
-        if (!pdfFonts?.pdfMake?.vfs) {
-          log("❌ pdfFonts.pdfMake.vfs NOT FOUND");
-        } else {
-          log("✅ vfs_fonts loaded");
-        }
+      // 🔑 SAFARI-SAFE VFS EXTRACTION
+      const vfs =
+        (vfsModule as any).pdfMake?.vfs ||
+        (vfsModule as any).default?.pdfMake?.vfs ||
+        (vfsModule as any).default ||
+        null;
 
-        pdfMakeInstance.vfs = pdfFonts.pdfMake.vfs;
-
-        pdfMakeInstance.fonts = {
-          Amiri: {
-            normal: "Amiri-Regular.ttf",
-          },
-        };
-
-        log("✅ pdfMake configured");
-        setPdfMake(pdfMakeInstance);
-      } catch (err) {
-        log("❌ Error loading pdfMake");
-        log(err);
+      if (!vfs) {
+        console.error("❌ VFS NOT FOUND IN MODULE");
+        console.log("🧩 vfsModule keys:", Object.keys(vfsModule));
+        return;
       }
-    };
 
-    load();
-  }, []);
+      console.log("✅ VFS FOUND");
+
+      pdfMakeInstance.vfs = vfs;
+
+      pdfMakeInstance.fonts = {
+        Amiri: {
+          normal: "Amiri-Regular.ttf",
+        },
+      };
+
+      console.log("✅ pdfMake READY");
+      setPdfMake(pdfMakeInstance);
+    } catch (e) {
+      console.error("❌ pdfMake load failed", e);
+    }
+  };
+
+  load();
+}, []);
 
   const generatePDF = () => {
     log("🖱 Button clicked");
