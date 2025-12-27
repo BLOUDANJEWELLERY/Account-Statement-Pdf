@@ -1,12 +1,11 @@
 import { useEffect } from "react";
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
+import type { TDocumentDefinitions } from "pdfmake/interfaces";
 
 export default function Home() {
   useEffect(() => {
-    // 👇 TypeScript fix (this is the key)
     const fonts = pdfFonts as any;
-
     pdfMake.vfs = fonts.pdfMake.vfs;
 
     pdfMake.fonts = {
@@ -17,14 +16,20 @@ export default function Home() {
   }, []);
 
   const generatePDF = () => {
-    const docDefinition = {
+    const docDefinition: TDocumentDefinitions = {
       defaultStyle: {
         font: "Amiri",
         alignment: "right",
       },
       content: [
-        { text: "هذا ملف PDF باللغة العربية", fontSize: 18 },
-        { text: "يعمل بدون أخطاء في الإنتاج", fontSize: 14 },
+        {
+          text: "هذا ملف PDF باللغة العربية",
+          fontSize: 18,
+        },
+        {
+          text: "تم إنشاؤه بدون أخطاء TypeScript",
+          fontSize: 14,
+        },
       ],
     };
 
