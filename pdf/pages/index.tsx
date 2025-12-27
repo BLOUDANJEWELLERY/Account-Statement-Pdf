@@ -1,34 +1,55 @@
-import { useState } from 'react';
+import { useEffect } from "react";
+import pdfMake from "pdfmake/build/pdfmake";
+import pdfFonts from "pdfmake/build/vfs_fonts";
 
-export default function Home() {
-  const [text, setText] = useState('مرحبا بالعالم');
+export default function CreatePdfPage() {
+  useEffect(() => {
+    pdfMake.vfs = {
+      ...pdfFonts.pdfMake.vfs,
+      "Amiri-Regular.ttf": "/fonts/Amiri-Regular.ttf",
+    };
 
-  const generatePDF = async () => {
-    const response = await fetch('/api/generate-pdf', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text }),
-    });
+    pdfMake.fonts = {
+      Amiri: {
+        normal: "Amiri-Regular.ttf",
+      },
+    };
+  }, []);
 
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-    window.open(url); // opens PDF in new tab
+  const generatePDF = () => {
+    const docDefinition = {
+      defaultStyle: {
+        font: "Amiri",
+        alignment: "right",
+      },
+      content: [
+        {
+          text: "هذا ملف PDF باللغة العربية",
+          fontSize: 18,
+          margin: [0, 0, 0, 10],
+        },
+        {
+          text: "يتم إنشاء هذا الملف باستخدام Next.js و TypeScript.",
+          fontSize: 14,
+        },
+      ],
+    };
+
+    pdfMake.createPdf(docDefinition).open();
   };
 
   return (
-    <div style={{ padding: 20, fontFamily: 'Arial, sans-serif' }}>
-      <h2>Arabic PDF Generator</h2>
-      <textarea
-        rows={5}
-        style={{ width: '100%', padding: 10 }}
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-      />
+    <div style={{ padding: 40 }}>
+      <h1>Arabic PDF Generator</h1>
       <button
         onClick={generatePDF}
-        style={{ marginTop: 10, padding: '10px 20px', cursor: 'pointer' }}
+        style={{
+          padding: "12px 24px",
+          fontSize: 16,
+          cursor: "pointer",
+        }}
       >
-        Generate PDF
+        Create Arabic PDF
       </button>
     </div>
   );
