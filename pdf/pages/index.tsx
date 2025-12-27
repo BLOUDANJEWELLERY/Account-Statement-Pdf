@@ -39,9 +39,8 @@ export default function Home() {
         { text: "يعمل بدون أي أخطاء على Netlify", fontSize: 14 },
       ],
     };
-
-    pdfMake.createPdf(docDefinition).open();
-  };
+pdfMake.createPdf(docDefinition).download("arabic.pdf");
+     };
 
   return (
     <div style={{ padding: 40 }}>
