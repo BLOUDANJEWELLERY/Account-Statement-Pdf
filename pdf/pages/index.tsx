@@ -12,7 +12,7 @@ export default function Home() {
     setLogs((l) => [...l, `[${new Date().toISOString()}] ${text}`]);
   };
 
-  // Capture all errors visibly (Safari-safe)
+  /* ---------- CAPTURE ALL ERRORS ON SCREEN ---------- */
   useEffect(() => {
     const origLog = console.log;
     const origErr = console.error;
@@ -21,6 +21,7 @@ export default function Home() {
       origLog(...a);
       a.forEach(log);
     };
+
     console.error = (...a) => {
       origErr(...a);
       a.forEach((x) => log("❌ " + x));
@@ -42,7 +43,7 @@ export default function Home() {
     };
   }, []);
 
-  // Load pdfMake ONLY on client
+  /* ---------- LOAD PDFMAKE (CLIENT ONLY) ---------- */
   useEffect(() => {
     const load = async () => {
       try {
@@ -60,22 +61,36 @@ export default function Home() {
           (vfsFontsModule as any).default ||
           {};
 
-        if (!defaultVfs) {
-          log("❌ Default VFS not found");
+        if (!defaultVfs || typeof defaultVfs !== "object") {
+          log("❌ Default VFS missing or invalid");
           return;
         }
 
         log("✅ Default VFS loaded");
 
-        // 🔑 Merge Arabic font into VFS
+        /* ---------- MERGE CUSTOM ARABIC FONT ---------- */
         pdfMakeInstance.vfs = {
           ...defaultVfs,
           ...customVfs,
         };
 
+        /* ---------- HARD ASSERT: FONT KEY ---------- */
+        if (!pdfMakeInstance.vfs["Amiri-Regular.ttf"]) {
+          log("❌ FONT KEY NOT FOUND IN VFS");
+          log("Available VFS keys:");
+          log(Object.keys(pdfMakeInstance.vfs));
+          return;
+        }
+
+        log("✅ FONT KEY CONFIRMED IN VFS");
+
+        /* ---------- iOS-SAFE FONT REGISTRATION ---------- */
         pdfMakeInstance.fonts = {
           Amiri: {
             normal: "Amiri-Regular.ttf",
+            bold: "Amiri-Regular.ttf",
+            italics: "Amiri-Regular.ttf",
+            bolditalics: "Amiri-Regular.ttf",
           },
         };
 
@@ -90,6 +105,7 @@ export default function Home() {
     load();
   }, []);
 
+  /* ---------- GENERATE PDF (SAFARI SAFE) ---------- */
   const generatePDF = () => {
     log("🖱 Button clicked");
 
@@ -111,7 +127,7 @@ export default function Home() {
           margin: [0, 0, 0, 12],
         },
         {
-          text: "يعمل على iPhone Safari و Netlify بدون أي مشاكل.",
+          text: "تم إنشاؤه بنجاح على iPhone Safari بدون أي أخطاء.",
           fontSize: 14,
         },
       ],
@@ -121,7 +137,7 @@ export default function Home() {
       log("📄 Creating PDF...");
       pdfMake.createPdf(docDefinition).getBlob((blob: Blob) => {
         log("✅ Blob created");
-        log(`📦 Size: ${blob.size} bytes`);
+        log(`📦 Blob size: ${blob.size} bytes`);
 
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -136,14 +152,14 @@ export default function Home() {
         log("⬇️ Download triggered");
       });
     } catch (e) {
-      log("❌ PDF generation failed");
+      log("❌ PDF generation exception");
       log(e);
     }
   };
 
   return (
     <div style={{ padding: 20, fontFamily: "monospace" }}>
-      <h1>Arabic PDF — Final Debug Page</h1>
+      <h1>Arabic PDF — Final Working Page</h1>
 
       <button
         onClick={generatePDF}
