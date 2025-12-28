@@ -48,34 +48,45 @@ useEffect(() => {
   })();
 }, []);
 
-  const createPdf = () => {
-    try {
-      log("🖱 Button clicked");
-      log("📄 Creating PDF...");
+const createPdf = () => {
+  try {
+    log("🖱 Button clicked");
+    log("📄 Creating PDF...");
 
-      const pdfMake = (window as any).pdfMake;
-      if (!pdfMake) throw new Error("pdfMake missing");
+    const pdfMake = (window as any).pdfMake;
+    if (!pdfMake) throw new Error("pdfMake missing");
 
-      const docDefinition = {
-        defaultStyle: {
-          font: "Amiri",
-          alignment: "right",
+    const docDefinition = {
+      defaultStyle: {
+        font: "Amiri",
+        alignment: "right",
+      },
+      content: [
+        { text: "السلام عليكم ورحمة الله وبركاته", fontSize: 18 },
+        {
+          text: "هذا ملف PDF باللغة العربية يعمل على Safari iPhone.",
+          margin: [0, 20, 0, 0],
         },
-        content: [
-          { text: "السلام عليكم ورحمة الله وبركاته", fontSize: 18 },
-          {
-            text: "هذا ملف PDF باللغة العربية يعمل على Safari iPhone.",
-            margin: [0, 20, 0, 0],
-          },
-        ],
-      };
+      ],
+    };
 
-      pdfMake.createPdf(docDefinition).open();
-      log("✅ PDF OPENED");
-    } catch (err: any) {
-      log("❌ PDF ERROR: " + err.message);
-    }
-  };
+    // ✅ iOS-safe PDF generation
+    pdfMake.createPdf(docDefinition).getBlob((blob: Blob) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "arabic.pdf"; // triggers download in Files/Preview
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      log("⬇️ PDF download triggered (iOS-safe)");
+    });
+  } catch (err: any) {
+    log("❌ PDF ERROR: " + err.message);
+  }
+};
 
   return (
     <>
