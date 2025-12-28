@@ -69,10 +69,7 @@ export default function Home() {
         log("✅ Default VFS loaded");
 
         /* ---------- MERGE CUSTOM ARABIC FONT ---------- */
-        pdfMakeInstance.vfs = {
-          ...defaultVfs,
-          ...customVfs,
-        };
+      pdfMakeInstance.vfs = customVfs;
 
         /* ---------- HARD ASSERT: FONT KEY ---------- */
         if (!pdfMakeInstance.vfs["Amiri-Regular.ttf"]) {
