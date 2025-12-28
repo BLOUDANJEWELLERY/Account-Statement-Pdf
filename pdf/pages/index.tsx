@@ -53,8 +53,23 @@ const createPdf = () => {
     log("🖱 Button clicked");
     log("📄 Creating PDF...");
 
-    const pdfMake = (window as any).pdfMake;
+    const pdfMake: any = (window as any).pdfMake;
     if (!pdfMake) throw new Error("pdfMake missing");
+
+    // Force VFS check
+    if (!pdfMake.vfs || !pdfMake.vfs["Amiri-Regular.ttf"]) {
+      throw new Error("Amiri font missing in VFS");
+    }
+
+    // Force fonts registration
+    pdfMake.fonts = {
+      Amiri: {
+        normal: "Amiri-Regular.ttf",
+        bold: "Amiri-Regular.ttf",
+        italics: "Amiri-Regular.ttf",
+        bolditalics: "Amiri-Regular.ttf",
+      },
+    };
 
     const docDefinition = {
       defaultStyle: {
@@ -70,17 +85,17 @@ const createPdf = () => {
       ],
     };
 
-    // ✅ iOS-safe PDF generation
+    // iOS-safe PDF download
     pdfMake.createPdf(docDefinition).getBlob((blob: Blob) => {
+      if (!blob) throw new Error("Blob generation failed");
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "arabic.pdf"; // triggers download in Files/Preview
+      a.download = "arabic.pdf";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-
       log("⬇️ PDF download triggered (iOS-safe)");
     });
   } catch (err: any) {
