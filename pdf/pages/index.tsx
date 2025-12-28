@@ -1,88 +1,32 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import type { TDocumentDefinitions } from "pdfmake/interfaces";
+import Head from "next/head";
 import { customVfs } from "../lib/customVfs";
 
-export default function Home() {
-  const [pdfMake, setPdfMake] = useState<any>(null);
+export default function ArabicPdfPage() {
   const [logs, setLogs] = useState<string[]>([]);
 
-  const log = (msg: any) => {
-    const text =
-      typeof msg === "string" ? msg : JSON.stringify(msg, null, 2);
-    setLogs((l) => [...l, `[${new Date().toISOString()}] ${text}`]);
-  };
+  const log = (msg: string) =>
+    setLogs((prev) => [...prev, `[${new Date().toISOString()}] ${msg}`]);
 
-  /* ---------- CAPTURE ALL ERRORS ON SCREEN ---------- */
   useEffect(() => {
-    const origLog = console.log;
-    const origErr = console.error;
-
-    console.log = (...a) => {
-      origLog(...a);
-      a.forEach(log);
-    };
-
-    console.error = (...a) => {
-      origErr(...a);
-      a.forEach((x) => log("❌ " + x));
-    };
-
-    window.onerror = (msg, src, line, col) => {
-      log(`❌ window.onerror: ${msg} @ ${line}:${col}`);
-      return false;
-    };
-
-    window.onunhandledrejection = (e) => {
-      log("❌ Unhandled rejection:");
-      log(e.reason);
-    };
-
-    return () => {
-      console.log = origLog;
-      console.error = origErr;
-    };
-  }, []);
-
-  /* ---------- LOAD PDFMAKE (CLIENT ONLY) ---------- */
-  useEffect(() => {
-    const load = async () => {
+    (async () => {
       try {
         log("📦 Importing pdfmake...");
         const pdfMakeModule = await import("pdfmake/build/pdfmake");
+        const pdfFonts = await import("pdfmake/build/vfs_fonts");
+
+        const pdfMake = pdfMakeModule.default || pdfMakeModule;
 
         log("📦 Importing default vfs...");
-        const vfsFontsModule = await import("pdfmake/build/vfs_fonts");
+        pdfMake.vfs = {
+          ...pdfFonts.pdfMake.vfs,
+          ...customVfs, // 🔥 MERGE, NOT REPLACE
+        };
 
-        const pdfMakeInstance = pdfMakeModule.default;
-
-        const defaultVfs =
-          (vfsFontsModule as any).pdfMake?.vfs ||
-          (vfsFontsModule as any).default?.pdfMake?.vfs ||
-          (vfsFontsModule as any).default ||
-          {};
-
-        if (!defaultVfs || typeof defaultVfs !== "object") {
-          log("❌ Default VFS missing or invalid");
-          return;
-        }
-
-        log("✅ Default VFS loaded");
-
-        /* ---------- MERGE CUSTOM ARABIC FONT ---------- */
-      pdfMakeInstance.vfs = customVfs;
-
-        /* ---------- HARD ASSERT: FONT KEY ---------- */
-        if (!pdfMakeInstance.vfs["Amiri-Regular.ttf"]) {
-          log("❌ FONT KEY NOT FOUND IN VFS");
-          log("Available VFS keys:");
-          log(Object.keys(pdfMakeInstance.vfs));
-          return;
-        }
-
-        log("✅ FONT KEY CONFIRMED IN VFS");
-
-        /* ---------- iOS-SAFE FONT REGISTRATION ---------- */
-        pdfMakeInstance.fonts = {
+        // 🚨 CRITICAL: fonts must reference EXACT key
+        pdfMake.fonts = {
           Amiri: {
             normal: "Amiri-Regular.ttf",
             bold: "Amiri-Regular.ttf",
@@ -91,97 +35,82 @@ export default function Home() {
           },
         };
 
-        setPdfMake(pdfMakeInstance);
-        log("✅ pdfMake READY with Amiri");
-      } catch (e) {
-        log("❌ pdfMake load failed");
-        log(e);
-      }
-    };
+        if (!pdfMake.vfs["Amiri-Regular.ttf"]) {
+          throw new Error("FONT NOT FOUND IN VFS OBJECT");
+        }
 
-    load();
+        // expose globally (Safari fix)
+        (window as any).pdfMake = pdfMake;
+
+        log("✅ pdfMake READY with Amiri");
+      } catch (err: any) {
+        log("❌ INIT ERROR: " + err.message);
+      }
+    })();
   }, []);
 
-  /* ---------- GENERATE PDF (SAFARI SAFE) ---------- */
-  const generatePDF = () => {
-    log("🖱 Button clicked");
-
-    if (!pdfMake) {
-      log("❌ pdfMake not ready");
-      return;
-    }
-
-    const docDefinition: TDocumentDefinitions = {
-      pageSize: "A4",
-      defaultStyle: {
-        font: "Amiri",
-        alignment: "right",
-      },
-      content: [
-        {
-          text: "هذا ملف PDF باللغة العربية",
-          fontSize: 20,
-          margin: [0, 0, 0, 12],
-        },
-        {
-          text: "تم إنشاؤه بنجاح على iPhone Safari بدون أي أخطاء.",
-          fontSize: 14,
-        },
-      ],
-    };
-
+  const createPdf = async () => {
     try {
+      log("🖱 Button clicked");
       log("📄 Creating PDF...");
-      pdfMake.createPdf(docDefinition).getBlob((blob: Blob) => {
-        log("✅ Blob created");
-        log(`📦 Blob size: ${blob.size} bytes`);
 
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "arabic.pdf";
+      const pdfMake = (window as any).pdfMake;
+      if (!pdfMake) throw new Error("pdfMake missing from window");
 
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+      const docDefinition = {
+        defaultStyle: {
+          font: "Amiri",
+          alignment: "right",
+        },
+        content: [
+          { text: "السلام عليكم ورحمة الله وبركاته", fontSize: 18 },
+          { text: "هذا ملف PDF باللغة العربية يعمل على Safari.", margin: [0, 20, 0, 0] },
+        ],
+      };
 
-        URL.revokeObjectURL(url);
-        log("⬇️ Download triggered");
-      });
-    } catch (e) {
-      log("❌ PDF generation exception");
-      log(e);
+      pdfMake.createPdf(docDefinition).open();
+      log("✅ PDF OPENED");
+    } catch (err: any) {
+      log("❌ PDF ERROR: " + err.message);
     }
   };
 
   return (
-    <div style={{ padding: 20, fontFamily: "monospace" }}>
-      <h1>Arabic PDF — Final Working Page</h1>
+    <>
+      <Head>
+        <title>Arabic PDF Debug</title>
+      </Head>
 
-      <button
-        onClick={generatePDF}
-        style={{
-          padding: 12,
-          fontSize: 16,
-          marginBottom: 20,
-        }}
-      >
-        Create Arabic PDF
-      </button>
+      <main style={{ padding: 20 }}>
+        <h1>Arabic PDF Generator</h1>
 
-      <div
-        style={{
-          background: "#000",
-          color: "#0f0",
-          padding: 12,
-          height: "50vh",
-          overflow: "auto",
-          whiteSpace: "pre-wrap",
-          border: "2px solid red",
-        }}
-      >
-        {logs.join("\n")}
-      </div>
-    </div>
+        <button
+          onClick={createPdf}
+          style={{
+            padding: "12px 20px",
+            fontSize: 16,
+            background: "#000",
+            color: "#fff",
+            borderRadius: 6,
+          }}
+        >
+          Create Arabic PDF
+        </button>
+
+        <pre
+          style={{
+            marginTop: 20,
+            background: "#111",
+            color: "#0f0",
+            padding: 12,
+            maxHeight: 300,
+            overflow: "auto",
+            fontSize: 12,
+          }}
+        >
+          {logs.join("\n")}
+        </pre>
+      </main>
+    </>
   );
 }
