@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import type { TDocumentDefinitions } from "pdfmake/interfaces";
+import { customVfs } from "../lib/customVfs";
 
 export default function Home() {
-  const [logs, setLogs] = useState<string[]>([]);
   const [pdfMake, setPdfMake] = useState<any>(null);
+  const [logs, setLogs] = useState<string[]>([]);
 
   const log = (msg: any) => {
     const text =
@@ -11,47 +12,78 @@ export default function Home() {
     setLogs((l) => [...l, `[${new Date().toISOString()}] ${text}`]);
   };
 
+  // Capture all errors visibly (Safari-safe)
   useEffect(() => {
-    log("🚀 useEffect started (client)");
+    const origLog = console.log;
+    const origErr = console.error;
 
+    console.log = (...a) => {
+      origLog(...a);
+      a.forEach(log);
+    };
+    console.error = (...a) => {
+      origErr(...a);
+      a.forEach((x) => log("❌ " + x));
+    };
+
+    window.onerror = (msg, src, line, col) => {
+      log(`❌ window.onerror: ${msg} @ ${line}:${col}`);
+      return false;
+    };
+
+    window.onunhandledrejection = (e) => {
+      log("❌ Unhandled rejection:");
+      log(e.reason);
+    };
+
+    return () => {
+      console.log = origLog;
+      console.error = origErr;
+    };
+  }, []);
+
+  // Load pdfMake ONLY on client
+  useEffect(() => {
     const load = async () => {
       try {
         log("📦 Importing pdfmake...");
         const pdfMakeModule = await import("pdfmake/build/pdfmake");
-        const vfsModule = await import("pdfmake/build/vfs_fonts");
+
+        log("📦 Importing default vfs...");
+        const vfsFontsModule = await import("pdfmake/build/vfs_fonts");
 
         const pdfMakeInstance = pdfMakeModule.default;
 
-        // SAFARI-SAFE VFS
-        const vfs =
-          (vfsModule as any).pdfMake?.vfs ||
-          (vfsModule as any).default?.pdfMake?.vfs ||
-          (vfsModule as any).default ||
-          null;
+        const defaultVfs =
+          (vfsFontsModule as any).pdfMake?.vfs ||
+          (vfsFontsModule as any).default?.pdfMake?.vfs ||
+          (vfsFontsModule as any).default ||
+          {};
 
-        if (!vfs) {
-          log("❌ VFS NOT FOUND");
+        if (!defaultVfs) {
+          log("❌ Default VFS not found");
           return;
         }
 
-        log("✅ VFS FOUND");
-        pdfMakeInstance.vfs = vfs;
+        log("✅ Default VFS loaded");
 
-        // Use built-in Roboto font (always works)
+        // 🔑 Merge Arabic font into VFS
+        pdfMakeInstance.vfs = {
+          ...defaultVfs,
+          ...customVfs,
+        };
+
         pdfMakeInstance.fonts = {
-          Roboto: {
-            normal: "Roboto-Regular.ttf",
-            bold: "Roboto-Medium.ttf",
-            italics: "Roboto-Italic.ttf",
-            bolditalics: "Roboto-MediumItalic.ttf",
+          Amiri: {
+            normal: "Amiri-Regular.ttf",
           },
         };
 
-        log("✅ pdfMake READY");
         setPdfMake(pdfMakeInstance);
-      } catch (err) {
+        log("✅ pdfMake READY with Amiri");
+      } catch (e) {
         log("❌ pdfMake load failed");
-        log(err);
+        log(e);
       }
     };
 
@@ -62,34 +94,39 @@ export default function Home() {
     log("🖱 Button clicked");
 
     if (!pdfMake) {
-      log("❌ pdfMake is NULL");
+      log("❌ pdfMake not ready");
       return;
     }
 
-    try {
-      const docDefinition: TDocumentDefinitions = {
-        defaultStyle: {
-          font: "Roboto", // Using built-in font
-          alignment: "right",
+    const docDefinition: TDocumentDefinitions = {
+      pageSize: "A4",
+      defaultStyle: {
+        font: "Amiri",
+        alignment: "right",
+      },
+      content: [
+        {
+          text: "هذا ملف PDF باللغة العربية",
+          fontSize: 20,
+          margin: [0, 0, 0, 12],
         },
-        content: [
-          { text: "هذا ملف PDF باللغة العربية", fontSize: 18 },
-          { text: "يعمل الآن على iPhone Safari و أي متصفح آخر", fontSize: 14 },
-        ],
-      };
+        {
+          text: "يعمل على iPhone Safari و Netlify بدون أي مشاكل.",
+          fontSize: 14,
+        },
+      ],
+    };
 
+    try {
       log("📄 Creating PDF...");
-
       pdfMake.createPdf(docDefinition).getBlob((blob: Blob) => {
         log("✅ Blob created");
-        log(`📦 Blob size: ${blob.size}`);
+        log(`📦 Size: ${blob.size} bytes`);
 
         const url = URL.createObjectURL(blob);
-        log("🔗 Blob URL created");
-
         const a = document.createElement("a");
         a.href = url;
-        a.download = "arabic-roboto.pdf";
+        a.download = "arabic.pdf";
 
         document.body.appendChild(a);
         a.click();
@@ -98,22 +135,22 @@ export default function Home() {
         URL.revokeObjectURL(url);
         log("⬇️ Download triggered");
       });
-    } catch (err) {
-      log("❌ Exception during PDF generation");
-      log(err);
+    } catch (e) {
+      log("❌ PDF generation failed");
+      log(e);
     }
   };
 
   return (
     <div style={{ padding: 20, fontFamily: "monospace" }}>
-      <h1>Arabic PDF Debug Mode</h1>
+      <h1>Arabic PDF — Final Debug Page</h1>
 
       <button
         onClick={generatePDF}
         style={{
           padding: 12,
-          marginBottom: 20,
           fontSize: 16,
+          marginBottom: 20,
         }}
       >
         Create Arabic PDF
@@ -121,12 +158,12 @@ export default function Home() {
 
       <div
         style={{
-          whiteSpace: "pre-wrap",
           background: "#000",
           color: "#0f0",
           padding: 12,
           height: "50vh",
           overflow: "auto",
+          whiteSpace: "pre-wrap",
           border: "2px solid red",
         }}
       >
