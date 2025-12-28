@@ -10,49 +10,49 @@ export default function ArabicPdfPage() {
   const log = (msg: string) =>
     setLogs((prev) => [...prev, `[${new Date().toISOString()}] ${msg}`]);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        log("📦 Importing pdfmake...");
-        const pdfMakeModule = await import("pdfmake/build/pdfmake");
-        const vfsModule = await import("pdfmake/build/vfs_fonts");
+useEffect(() => {
+  (async () => {
+    try {
+      log("📦 Importing pdfmake...");
+      const pdfMakeModule = await import("pdfmake/build/pdfmake");
+      const vfsModule = await import("pdfmake/build/vfs_fonts");
 
-        const pdfMake: any =
-          (pdfMakeModule as any).default || pdfMakeModule;
+      const pdfMake: any =
+        (pdfMakeModule as any).default || pdfMakeModule;
 
-        // 🔥 TYPE OVERRIDE (THIS IS THE FIX)
-        const defaultVfs = (vfsModule as any).pdfMake?.vfs;
-        if (!defaultVfs) throw new Error("Default VFS missing");
-
-        log("📦 Importing default vfs...");
-
-        pdfMake.vfs = {
-          ...defaultVfs,
-          ...customVfs,
-        };
-
-        pdfMake.fonts = {
-          Amiri: {
-            normal: "Amiri-Regular.ttf",
-            bold: "Amiri-Regular.ttf",
-            italics: "Amiri-Regular.ttf",
-            bolditalics: "Amiri-Regular.ttf",
-          },
-        };
-
-        if (!pdfMake.vfs["Amiri-Regular.ttf"]) {
-          throw new Error("Amiri font NOT found in VFS");
-        }
-
-        // Safari global lock
-        (window as any).pdfMake = pdfMake;
-
-        log("✅ pdfMake READY with Amiri");
-      } catch (err: any) {
-        log("❌ INIT ERROR: " + err.message);
+      // ✅ THIS IS THE FIX
+      if (!vfsModule.vfs) {
+        throw new Error("vfsModule.vfs missing");
       }
-    })();
-  }, []);
+
+      log("📦 Importing default vfs...");
+
+      pdfMake.vfs = {
+        ...vfsModule.vfs,   // ✅ correct source
+        ...customVfs,       // your Amiri font
+      };
+
+      pdfMake.fonts = {
+        Amiri: {
+          normal: "Amiri-Regular.ttf",
+          bold: "Amiri-Regular.ttf",
+          italics: "Amiri-Regular.ttf",
+          bolditalics: "Amiri-Regular.ttf",
+        },
+      };
+
+      if (!pdfMake.vfs["Amiri-Regular.ttf"]) {
+        throw new Error("Amiri font NOT found in VFS");
+      }
+
+      (window as any).pdfMake = pdfMake;
+
+      log("✅ pdfMake READY with Amiri");
+    } catch (err: any) {
+      log("❌ INIT ERROR: " + err.message);
+    }
+  })();
+}, []);
 
   const createPdf = () => {
     try {
