@@ -15,17 +15,22 @@ export default function ArabicPdfPage() {
       try {
         log("📦 Importing pdfmake...");
         const pdfMakeModule = await import("pdfmake/build/pdfmake");
-        const pdfFonts = await import("pdfmake/build/vfs_fonts");
+        const vfsModule = await import("pdfmake/build/vfs_fonts");
 
-        const pdfMake = pdfMakeModule.default || pdfMakeModule;
+        const pdfMake: any =
+          (pdfMakeModule as any).default || pdfMakeModule;
+
+        // 🔥 TYPE OVERRIDE (THIS IS THE FIX)
+        const defaultVfs = (vfsModule as any).pdfMake?.vfs;
+        if (!defaultVfs) throw new Error("Default VFS missing");
 
         log("📦 Importing default vfs...");
+
         pdfMake.vfs = {
-          ...pdfFonts.pdfMake.vfs,
-          ...customVfs, // 🔥 MERGE, NOT REPLACE
+          ...defaultVfs,
+          ...customVfs,
         };
 
-        // 🚨 CRITICAL: fonts must reference EXACT key
         pdfMake.fonts = {
           Amiri: {
             normal: "Amiri-Regular.ttf",
@@ -36,10 +41,10 @@ export default function ArabicPdfPage() {
         };
 
         if (!pdfMake.vfs["Amiri-Regular.ttf"]) {
-          throw new Error("FONT NOT FOUND IN VFS OBJECT");
+          throw new Error("Amiri font NOT found in VFS");
         }
 
-        // expose globally (Safari fix)
+        // Safari global lock
         (window as any).pdfMake = pdfMake;
 
         log("✅ pdfMake READY with Amiri");
@@ -49,13 +54,13 @@ export default function ArabicPdfPage() {
     })();
   }, []);
 
-  const createPdf = async () => {
+  const createPdf = () => {
     try {
       log("🖱 Button clicked");
       log("📄 Creating PDF...");
 
       const pdfMake = (window as any).pdfMake;
-      if (!pdfMake) throw new Error("pdfMake missing from window");
+      if (!pdfMake) throw new Error("pdfMake missing");
 
       const docDefinition = {
         defaultStyle: {
@@ -64,7 +69,10 @@ export default function ArabicPdfPage() {
         },
         content: [
           { text: "السلام عليكم ورحمة الله وبركاته", fontSize: 18 },
-          { text: "هذا ملف PDF باللغة العربية يعمل على Safari.", margin: [0, 20, 0, 0] },
+          {
+            text: "هذا ملف PDF باللغة العربية يعمل على Safari iPhone.",
+            margin: [0, 20, 0, 0],
+          },
         ],
       };
 
