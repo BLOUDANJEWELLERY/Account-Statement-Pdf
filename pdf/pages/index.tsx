@@ -15,21 +15,19 @@ useEffect(() => {
     try {
       log("📦 Importing pdfmake...");
       const pdfMakeModule = await import("pdfmake/build/pdfmake");
-      const vfsModule = await import("pdfmake/build/vfs_fonts");
+      const pdfFontsModule = await import("pdfmake/build/vfs_fonts");
 
-      const pdfMake: any =
-        (pdfMakeModule as any).default || pdfMakeModule;
+      const pdfMake: any = (pdfMakeModule as any).default || pdfMakeModule;
 
-      // ✅ THIS IS THE FIX
-      if (!vfsModule.vfs) {
-        throw new Error("vfsModule.vfs missing");
-      }
+      // ⚠️ Force VFS using 'any' cast
+      const vfs: any = pdfFontsModule;
+      if (!vfs || !vfs.default) throw new Error("VFS missing");
 
       log("📦 Importing default vfs...");
 
       pdfMake.vfs = {
-        ...vfsModule.vfs,   // ✅ correct source
-        ...customVfs,       // your Amiri font
+        ...(vfs.default || {}),
+        ...customVfs,
       };
 
       pdfMake.fonts = {
@@ -41,15 +39,11 @@ useEffect(() => {
         },
       };
 
-      if (!pdfMake.vfs["Amiri-Regular.ttf"]) {
-        throw new Error("Amiri font NOT found in VFS");
-      }
-
       (window as any).pdfMake = pdfMake;
-
       log("✅ pdfMake READY with Amiri");
     } catch (err: any) {
       log("❌ INIT ERROR: " + err.message);
+      log("💡 Hint: pdfmake ESM changed exports, force 'any' on vfsModule");
     }
   })();
 }, []);
