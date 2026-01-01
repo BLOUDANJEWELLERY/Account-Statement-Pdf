@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="format-detection" content="telephone=no">
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#000000">
     <title>شركة جوهرة بلوذان - كشف الحساب</title>
     <style>
@@ -825,12 +825,11 @@
         
         document.querySelector('.print-section').appendChild(clearBtn);
     </script>
-    <script>
+<script>
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('service-worker.js')
-    .then(() => console.log('Service Worker registered'))
-    .catch(err => console.error('SW failed', err));
+  navigator.serviceWorker.register('./service-worker.js');
 }
 </script>
+
 </body>
 </html>
