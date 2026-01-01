@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="format-detection" content="telephone=no">
+    <title>شركة جوهرة بلوذان - كشف الحساب</title>
+    <style>
+        /* A4 paper dimensions: 210mm x 297mm */
+        @page {
+            size: A4;
+            margin: 10mm;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', 'Segoe UI', sans-serif;
+        }
+        
+        body {
+            background-color: #f8f0e6;
+            color: #333;
+            padding: 10px;
+            font-size: 13px;
+            line-height: 1.3;
+        }
+        
+        .container {
+            max-width: 210mm;
+            min-height: 287mm;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 6px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
+            padding: 15px;
+            position: relative;
+            border: 2px solid #d4af37;
+        }
+        
+        /* Main Header Container */
+        .header-container {
+            margin-bottom: 15px;
+            background: linear-gradient(to bottom, #5c0000, #7a0d17);
+            border-radius: 4px;
+            border: 2px solid #d4af37;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .header-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #d4af37;
+        }
+        
+        /* Top Row Header - English left, logo center, Arabic right */
+        .company-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            color: #ffffff;
+            direction: ltr;
+        }
+        
+        .company-info {
+            flex: 1;
+            padding: 3px;
+        }
+        
+        .company-info.english {
+            text-align: left;
+            direction: ltr;
+            font-size: 10px;
+        }
+        
+        .company-info.arabic {
+            text-align: right;
+            direction: rtl;
+            font-size: 11px;
+        }
+        
+        /* Increased Arabic company name font size */
+        .company-info.arabic .company-name {
+            font-size: 15px;
+            color: #d4af37;
+        }
+        
+        .company-logo {
+            flex: 0 0 90px;
+            text-align: center;
+            padding: 0 10px;
+        }
+        
+        .logo-img {
+            max-width: 70px;
+            height: auto;
+        }
+        
+        .company-name {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 3px;
+            color: #d4af37;
+            line-height: 1.2;
+        }
+        
+        .company-details {
+            font-size: 9px;
+            color: #ffcccc;
+            line-height: 1.2;
+        }
+        
+        .company-address, .company-phone, .company-cr {
+            color: #ffcccc;
+            text-decoration: none;
+            font-weight: normal;
+            margin-top: 2px;
+            display: block;
+        }
+        
+        /* Bottom Row Header - Title only */
+        .header-bottom {
+            padding: 5px 15px 10px 15px;
+            text-align: center;
+            background: linear-gradient(to bottom, #7a0d17, #5c0000);
+        }
+        
+        .header-title {
+            text-align: center;
+            color: #ffffff;
+            direction: rtl;
+        }
+        
+        .header-title h1 {
+            font-size: 18px;
+            color: #d4af37;
+            margin: 0;
+            padding: 0;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+        
+        .header-title p {
+            font-size: 14px;
+            color: #ffcccc;
+            margin: 3px 0 0 0;
+            padding: 0;
+            font-weight: bold;
+            font-style: italic;
+        }
+        
+        /* Print Button */
+        .print-section {
+            text-align: center;
+            margin-bottom: 15px;
+            direction: rtl;
+        }
+        
+        .print-btn {
+            background: linear-gradient(to bottom, #d4af37, #b8941f);
+            color: #5c0000;
+            border: none;
+            padding: 8px 18px;
+            font-size: 13px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid #b8941f;
+        }
+        
+        .print-btn:hover {
+            background: linear-gradient(to bottom, #e6c158, #d4af37);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+        }
+        
+        .print-btn:active {
+            transform: translateY(0);
+        }
+        
+        /* Table Container */
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 15px;
+            border: 2px solid #d4af37;
+            border-radius: 4px;
+            padding: 0;
+            background-color: #fffaf0;
+            direction: rtl;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            table-layout: fixed;
+            border: 2px solid #d4af37;
+        }
+        
+        th {
+            background: linear-gradient(to bottom, #7a0d17, #5c0000);
+            color: #d4af37;
+            padding: 8px 4px;
+            text-align: center;
+            font-weight: bold;
+            border: 2px solid #d4af37;
+            font-size: 13px;
+        }
+        
+        td {
+            padding: 6px 4px;
+            border: 2px solid #d4af37;
+            text-align: center;
+            height: 34px;
+            position: relative;
+            background-color: #ffffff;
+        }
+        
+        /* Remove alternating row colors - all rows same */
+        tbody tr:nth-child(even) {
+            background-color: #ffffff;
+        }
+        
+        tbody tr:hover {
+            background-color: #fffaf0;
+        }
+        
+        /* Editable cell - Adjusted padding and increased font size */
+        .editable-cell {
+            background-color: #ffffff;
+            text-align: right;
+            padding-right: 5px; /* Reduced from 6px */
+            border-right: 2px solid #d4af37;
+        }
+        
+        .editable-cell input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            outline: none;
+            background: transparent;
+            text-align: right;
+            padding: 0 5px; /* Reduced from 6px */
+            font-size: 18px; /* Increased from 16px to 18px */
+            font-family: inherit;
+            direction: rtl;
+            color: #333;
+            font-weight: bold;
+        }
+        
+        .editable-cell input:focus {
+            background-color: #fff8e1;
+            border-bottom: 2px solid #9b111e;
+        }
+        
+        .editable-cell input::placeholder {
+            color: #888;
+            font-style: italic;
+            font-size: 14px; /* Increased from 13px */
+            font-weight: normal;
+        }
+        
+        /* Updated Column widths */
+        .col-1 { width: 7%; }   /* رقم */
+        .col-2 { width: 25%; }  /* مجوهرات */
+        .col-3 { width: 17%; }  /* ذهب ٩٩٩ لنا */
+        .col-4 { width: 17%; }  /* نقدي لنا */
+        .col-5 { width: 17%; }  /* ذهب ٩٩٩ لكم */
+        .col-6 { width: 17%; }  /* نقدي لكم */
+        
+        /* Number column styling */
+        .number-cell {
+            color: #666;
+            font-weight: bold;
+            font-size: 12px;
+            border-left: 2px solid #d4af37;
+        }
+        
+        /* Dash placeholder styling */
+        .dash-placeholder {
+            position: relative;
+            color: #777;
+        }
+        
+        .dash-placeholder::before {
+            content: "-";
+            position: absolute;
+            right: 40%;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: normal;
+            font-size: 16px;
+            color: #777;
+            font-weight: bold;
+        }
+        
+        /* Clear button */
+        .clear-btn {
+            background: linear-gradient(to bottom, #9b111e, #7a0d17);
+            color: #d4af37;
+            border: none;
+            padding: 7px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: all 0.3s;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            border: 1px solid #d4af37;
+        }
+        
+        .clear-btn:hover {
+            background: linear-gradient(to bottom, #c11b2b, #9b111e);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+        }
+        
+        .clear-btn:active {
+            transform: translateY(0);
+        }
+        
+        /* Print-specific styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+                margin: 0;
+                font-size: 12px;
+            }
+            
+            .container {
+                max-width: 100%;
+                min-height: 100%;
+                box-shadow: none;
+                padding: 3mm;
+                margin: 0;
+                border-radius: 0;
+                border: 2px solid #d4af37;
+            }
+            
+            .print-section, .clear-btn {
+                display: none;
+            }
+            
+            .header-container {
+                background: linear-gradient(to bottom, #5c0000, #7a0d17) !important;
+                color: #ffffff !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                border: 2px solid #d4af37 !important;
+                direction: ltr;
+            }
+            
+            .header-title h1 {
+                color: #d4af37 !important;
+                font-size: 17px !important;
+            }
+            
+            .header-title p {
+                color: #ffcccc !important;
+                font-size: 14px !important;
+            }
+            
+            .company-name, .company-details, .company-phone, .company-address, .company-cr {
+                color: #ffcccc !important;
+                text-decoration: none !important;
+            }
+            
+            .company-name {
+                color: #d4af37 !important;
+                font-size: 14px !important;
+            }
+            
+            .company-info.arabic .company-name {
+                font-size: 15px !important;
+            }
+            
+            .company-details {
+                font-size: 10px !important;
+            }
+            
+            .table-container {
+                border: 2px solid #d4af37 !important;
+            }
+            
+            table {
+                font-size: 12px;
+                border: 2px solid #d4af37 !important;
+            }
+            
+            th, td {
+                padding: 5px 3px;
+                border: 2px solid #d4af37 !important;
+            }
+            
+            th {
+                background: linear-gradient(to bottom, #7a0d17, #5c0000) !important;
+                color: #d4af37 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                font-size: 13px !important;
+                border: 2px solid #d4af37 !important;
+            }
+            
+            td {
+                background-color: white !important;
+            }
+            
+            /* Make jewellery text even bigger in print */
+            .jewellery-text {
+                font-size: 20px !important; /* Increased from 17px to 20px */
+                font-weight: bold !important;
+                color: #000 !important;
+                text-align: right;
+                direction: rtl;
+            }
+            
+            /* Darker, more visible dash placeholder in print */
+            .dash-placeholder::before {
+                color: #555 !important;
+                font-size: 15px !important;
+                right: 40% !important;
+                font-weight: bold !important;
+            }
+            
+            .editable-cell input {
+                border-bottom: 1px dotted #999;
+            }
+            
+            /* Keep number column empty in print */
+            .number-cell {
+                color: #666 !important;
+                font-weight: normal !important;
+                border-left: 2px solid #d4af37 !important;
+                font-size: 13px !important;
+            }
+            
+            .editable-cell {
+                border-right: 2px solid #d4af37 !important;
+                padding-right: 5px !important; /* Match the reduced padding */
+            }
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+                font-size: 12px;
+            }
+            
+            .container {
+                padding: 10px;
+                border-radius: 4px;
+            }
+            
+            .company-header-top {
+                flex-direction: column;
+                text-align: center;
+                padding: 8px 10px;
+            }
+            
+            .company-info.english, .company-info.arabic {
+                padding: 5px 0;
+                text-align: center;
+                width: 100%;
+                font-size: 9px;
+            }
+            
+            .company-info.arabic {
+                font-size: 10px;
+            }
+            
+            .company-info.english {
+                direction: ltr;
+                order: 1;
+                padding-bottom: 8px;
+            }
+            
+            .company-logo {
+                order: 2;
+                margin: 5px 0;
+                flex: 0 0 auto;
+                padding: 0;
+            }
+            
+            .logo-img {
+                max-width: 60px;
+            }
+            
+            .company-info.arabic {
+                direction: rtl;
+                order: 3;
+                padding-top: 8px;
+            }
+            
+            .company-name {
+                font-size: 12px;
+            }
+            
+            .company-info.arabic .company-name {
+                font-size: 13px;
+            }
+            
+            .header-bottom {
+                padding: 3px 10px 8px 10px;
+            }
+            
+            .header-title h1 {
+                font-size: 16px;
+            }
+            
+            .header-title p {
+                font-size: 13px;
+            }
+            
+            .print-btn, .clear-btn {
+                padding: 7px 14px;
+                font-size: 12px;
+            }
+            
+            table {
+                font-size: 11px;
+            }
+            
+            th, td {
+                padding: 5px 3px;
+            }
+            
+            .dash-placeholder::before {
+                right: 45%;
+                font-size: 15px;
+            }
+            
+            /* Adjust jewellery column for mobile */
+            .editable-cell {
+                padding-right: 4px;
+            }
+            
+            .editable-cell input {
+                font-size: 16px; /* Increased for mobile from 14px to 16px */
+                padding: 0 4px;
+            }
+            
+            .editable-cell input::placeholder {
+                font-size: 13px; /* Increased for mobile */
+            }
+            
+            .number-cell {
+                font-size: 11px;
+            }
+            
+            th {
+                font-size: 12px;
+            }
+        }
+        
+        /* Ensure table fits on one page */
+        @media print and (height: 297mm) {
+            .container {
+                page-break-inside: avoid;
+                page-break-after: avoid;
+            }
+            
+            table {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Clean Two-Row Header Container -->
+        <div class="header-container">
+            <!-- Top Row: English left, logo center, Arabic right -->
+            <div class="company-header-top">
+                <!-- English details on LEFT -->
+                <div class="company-info english">
+                    <div class="company-name">Bloudan Jewellery Co.</div>
+                    <div class="company-details">
+                        <div class="company-address">Kuwait - Al-Sharq - Mubarak Al-Kabir Street</div>
+                        <div class="company-address">Abdullah Al-Rabea'a Building - Shop 11</div>
+                        <div class="company-phone">Tel: +965-66634698, +965-99783299</div>
+                        <div class="company-cr">C.R No: 65864</div>
+                    </div>
+                </div>
+                
+                <!-- Logo in CENTER -->
+                <div class="company-logo">
+                    <img src="./logo.png" alt="Bloudan Jewellery Logo" class="logo-img">
+                </div>
+                
+                <!-- Arabic details on RIGHT (with increased font size) -->
+                <div class="company-info arabic">
+                    <div class="company-name">شركة جوهرة بلوذان</div>
+                    <div class="company-details">
+                        <div class="company-address">الكويت - الشرق - شارع مبارك الكبير</div>
+                        <div class="company-address">عمارة عبدالله الربيعي - محل 11</div>
+                        <div class="company-phone">هاتف: ٩٦٥+ ٦٦٦٣٤٦٩٨ ، ٩٦٥+ ٩٩٧٨٣٢٩٩</div>
+                        <div class="company-cr">س.ت: ٦٥٨٦٤</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bottom Row: Title only -->
+            <div class="header-bottom">
+                <div class="header-title">
+                    <h1>كشف الحساب</h1>
+                    <p>Account Statement</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Print Button -->
+        <div class="print-section">
+            <button class="print-btn" onclick="window.print()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                    <rect x="6" y="14" width="12" height="8"></rect>
+                </svg>
+                طباعة الصفحة / Print Page
+            </button>
+        </div>
+        
+        <!-- Table -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="col-1">رقم</th>
+                        <th class="col-2">مجوهرات</th>
+                        <th class="col-3">ذهب ٩٩٩ لنا</th>
+                        <th class="col-4">نقدي لنا</th>
+                        <th class="col-5">ذهب ٩٩٩ لكم</th>
+                        <th class="col-6">نقدي لكم</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <!-- 15 rows will be generated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Removed instructions section -->
+    </div>
+
+    <script>
+        // Generate 15 rows for the table
+        const tableBody = document.getElementById('table-body');
+        
+        for (let i = 1; i <= 15; i++) {
+            const row = document.createElement('tr');
+            row.id = `row-${i}`;
+            
+            // Column 1: رقم (Number) - Empty as requested
+            const cell1 = document.createElement('td');
+            cell1.className = 'number-cell';
+            cell1.textContent = ''; // Empty as requested
+            row.appendChild(cell1);
+            
+            // Column 2: مجوهرات (Jewellery) - Editable
+            const cell2 = document.createElement('td');
+            cell2.className = 'editable-cell';
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = 'اكتب نوع المجوهرات هنا...';
+            input.id = `jewellery-${i}`;
+            cell2.appendChild(input);
+            row.appendChild(cell2);
+            
+            // Column 3: ذهب ٩٩٩ لنا - Darker dash placeholder
+            const cell3 = document.createElement('td');
+            cell3.className = 'dash-placeholder';
+            cell3.id = `gold-to-us-${i}`;
+            row.appendChild(cell3);
+            
+            // Column 4: نقدي لنا - Darker dash placeholder
+            const cell4 = document.createElement('td');
+            cell4.className = 'dash-placeholder';
+            cell4.id = `cash-to-us-${i}`;
+            row.appendChild(cell4);
+            
+            // Column 5: ذهب ٩٩٩ لكم - Darker dash placeholder
+            const cell5 = document.createElement('td');
+            cell5.className = 'dash-placeholder';
+            cell5.id = `gold-to-you-${i}`;
+            row.appendChild(cell5);
+            
+            // Column 6: نقدي لكم - Darker dash placeholder
+            const cell6 = document.createElement('td');
+            cell6.className = 'dash-placeholder';
+            cell6.id = `cash-to-you-${i}`;
+            row.appendChild(cell6);
+            
+            tableBody.appendChild(row);
+        }
+        
+        // Print functionality
+        const printBtn = document.querySelector('.print-btn');
+        printBtn.addEventListener('click', function() {
+            // Save any unsaved input values
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                const cell = input.parentElement;
+                if (input.value.trim() !== '') {
+                    // Create a span to show the value when printing
+                    const valueSpan = document.createElement('span');
+                    valueSpan.textContent = input.value;
+                    valueSpan.className = 'jewellery-text'; // Add special class for printing
+                    valueSpan.style.display = 'none';
+                    cell.appendChild(valueSpan);
+                    
+                    // Hide the input and show the span when printing
+                    const printStyle = document.createElement('style');
+                    printStyle.textContent = `
+                        @media print {
+                            .editable-cell input { display: none; }
+                            .editable-cell span.jewellery-text { 
+                                display: inline !important; 
+                                font-weight: bold !important;
+                                font-size: 20px !important; /* Increased from 17px to 20px */
+                                color: #000 !important;
+                                text-align: right !important;
+                                direction: rtl !important;
+                            }
+                        }
+                    `;
+                    document.head.appendChild(printStyle);
+                }
+            });
+            
+            // Show printing message
+            const originalText = this.innerHTML;
+            this.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                    <polyline points="13 2 13 9 20 9"></polyline>
+                </svg>
+                جاري الطباعة...
+            `;
+            this.disabled = true;
+            
+            // Small delay to ensure DOM updates
+            setTimeout(() => {
+                window.print();
+                
+                // Reset button after printing
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                    this.disabled = false;
+                    
+                    // Remove temporary spans
+                    document.querySelectorAll('.editable-cell span').forEach(span => {
+                        span.remove();
+                    });
+                }, 500);
+            }, 300);
+        });
+        
+        // Auto-save functionality (saves to localStorage)
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach((input, index) => {
+            // Load saved values
+            const savedValue = localStorage.getItem(`jewellery_row_${index}`);
+            if (savedValue) {
+                input.value = savedValue;
+            }
+            
+            // Save on input
+            input.addEventListener('input', function() {
+                localStorage.setItem(`jewellery_row_${index}`, this.value);
+            });
+        });
+        
+        // Clear all button
+        const clearBtn = document.createElement('button');
+        clearBtn.className = 'clear-btn';
+        clearBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+            مسح الحقول
+        `;
+        
+        clearBtn.addEventListener('click', function() {
+            if (confirm('هل أنت متأكد من مسح جميع الحقول؟')) {
+                document.querySelectorAll('input').forEach(input => {
+                    input.value = '';
+                });
+                
+                localStorage.clear();
+                
+                // Show confirmation message
+                const confirmation = document.createElement('div');
+                confirmation.textContent = '✓ تم المسح بنجاح';
+                confirmation.style.cssText = 'position: fixed; top: 15px; right: 15px; background: linear-gradient(to bottom, #9b111e, #7a0d17); color: #d4af37; padding: 8px 12px; border-radius: 4px; z-index: 1000; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-size: 12px; border: 1px solid #d4af37;';
+                document.body.appendChild(confirmation);
+                
+                setTimeout(() => {
+                    confirmation.remove();
+                }, 1500);
+            }
+        });
+        
+        document.querySelector('.print-section').appendChild(clearBtn);
+    </script>
+</body>
+</html>
