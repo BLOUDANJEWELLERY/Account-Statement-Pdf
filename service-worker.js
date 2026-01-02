@@ -2,6 +2,7 @@ const CACHE_NAME = 'offline-v1';
 const FILES = [
   './',
   './index.html',
+  './favicon.PNG',
   './manifest.json'
 ];
 
