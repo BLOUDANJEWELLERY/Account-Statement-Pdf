@@ -1,6 +1,7 @@
 {
   "name": "Account Statement PDF",
   "short_name": "Statement",
+  "description": "Bloudan Jewellery Account Statement PDF Creation.",
   "start_url": "/Account-Statement-Pdf/",
   "scope": "/Account-Statement-Pdf/",
   "display": "standalone",
