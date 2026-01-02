@@ -1,20 +1,37 @@
-const CACHE_NAME = 'offline-v1';
-const FILES = [
-  './',
-  './index.html',
-  './favicon.PNG',
-  './manifest.json'
-];
+const CACHE_NAME = "offline-v1";
+const OFFLINE_URL = "/Account-Statement-Pdf/";
 
-self.addEventListener('install', event => {
+self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(FILES))
+    caches.open(CACHE_NAME).then(cache =>
+      cache.addAll([
+        OFFLINE_URL,
+        "/Account-Statement-Pdf/index.html"
+      ])
+    )
   );
   self.skipWaiting();
 });
 
-self.addEventListener('fetch', event => {
+self.addEventListener("activate", event => {
+  event.waitUntil(self.clients.claim());
+});
+
+self.addEventListener("fetch", event => {
+  // Only handle navigation requests
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request).catch(() =>
+        caches.match(OFFLINE_URL)
+      )
+    );
+    return;
+  }
+
+  // Static assets
   event.respondWith(
-    caches.match(event.request).then(r => r || fetch(event.request))
+    caches.match(event.request).then(response =>
+      response || fetch(event.request)
+    )
   );
 });
