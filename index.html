@@ -333,6 +333,8 @@
         
         /* Style for the "21 KT" text in row 14 */
         .kt-text {
+            direction: ltr;
+            unicode-bidi: isolate;
             color: #000000;
             font-weight: bold;
             font-size: 16px;
@@ -747,7 +749,7 @@
             
             if (i === 14) { // 5th row from bottom (18-5+1 = 14)
                 cell3.className = 'kt-text';
-                cell3.textContent = 'KT 21';
+                cell3.textContent = '21 KT';
             } else {
                 cell3.className = 'dash-placeholder lana';
             }
