@@ -369,7 +369,13 @@
         .clear-btn:active {
             transform: translateY(0);
         }
-        
+
+        @media print {
+    .container {
+        transform: scale(0.97);  /* shrink 3% */
+        transform-origin: top left;
+    }
+}
         /* Print-specific styles */
         @media print {
             body {
