@@ -331,6 +331,14 @@
             font-weight: bold;
         }
         
+        /* Style for the "21 KT" text in row 14 */
+        .kt-text {
+            color: #000000;
+            font-weight: bold;
+            font-size: 16px;
+            font-family: 'Arial', sans-serif;
+        }
+        
         /* Clear button */
         .clear-btn {
             background: linear-gradient(to bottom, #9b111e, #7a0d17);
@@ -472,6 +480,14 @@
                 font-weight: bold !important;
             }
             
+            /* "21 KT" text in print */
+            .kt-text {
+                color: #000000 !important;
+                font-weight: bold !important;
+                font-size: 16px !important;
+                font-family: 'Arial', sans-serif !important;
+            }
+            
             .editable-cell input {
                 border-bottom: 1px dotted #999;
             }
@@ -594,6 +610,11 @@
             
             .editable-cell input::placeholder {
                 font-size: 13px; /* Increased for mobile */
+            }
+            
+            /* "21 KT" text in mobile */
+            .kt-text {
+                font-size: 14px !important;
             }
             
             .number-cell {
@@ -720,9 +741,16 @@
             row.appendChild(cell2);
             
             // Column 3: ذهب ٩٩٩ لنا - Black dash placeholder for "لنا"
+            // For row 14 (5th from bottom), add "21 KT" instead of dash
             const cell3 = document.createElement('td');
-            cell3.className = 'dash-placeholder lana';
             cell3.id = `gold-to-us-${i}`;
+            
+            if (i === 14) { // 5th row from bottom (18-5+1 = 14)
+                cell3.className = 'kt-text';
+                cell3.textContent = '21 KT';
+            } else {
+                cell3.className = 'dash-placeholder lana';
+            }
             row.appendChild(cell3);
             
             // Column 4: نقدي لنا - Black dash placeholder for "لنا"
