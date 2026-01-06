@@ -6,6 +6,7 @@ self.addEventListener("install", event => {
     caches.open(CACHE_NAME).then(cache =>
       cache.addAll([
         OFFLINE_URL,
+        "/Account-Statement-Pdf/logo.png",
         "/Account-Statement-Pdf/index.html"
       ])
     )
